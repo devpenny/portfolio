@@ -615,6 +615,82 @@
                 grid-template-columns: 1fr;
             }
         }
+
+            /* Plus sign container - this will be positioned behind the hero content box */
+        .background-plus-container {
+            position: absolute;
+            z-index: 0;
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none; /* Allow clicks to pass through to elements below */
+            overflow: hidden;
+        }
+        
+        .svg-plus {
+            position: absolute;
+            z-index: 0;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: filter 0.3s ease, transform 0.3s ease;
+        }
+        
+        .svg-plus:hover {
+            filter: brightness(1.5) drop-shadow(0 0 8px currentColor);
+            transform: scale(1.15);
+        }
+        
+        .float-slow {
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .float-medium {
+            animation: float 5s ease-in-out infinite;
+        }
+        
+        .float-fast {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse {
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* Make sure hero content stays above the plus signs */
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
@@ -648,7 +724,9 @@
     <!-- Hero Section -->
     <section id="hero" style="
         position: relative;
-        background-image: url('career_pattern_5.png');
+        background-color: #111;
+        opacity: 0.95;
+        /* background-image: url('career_pattern_5.png'); */
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -657,6 +735,7 @@
         align-items: center;
         justify-content: center;
     ">
+        <div class="background-plus-container" id="plusContainer"></div>    
         <div style="
             background: rgba(0, 0, 0, 0.6);
             padding: 2rem;
@@ -671,9 +750,9 @@
         </div>
     
         <!-- Pixel art decorations -->
-        <div class="pixel-art-decoration" style="top: 100px; left: 100px;"></div>
+        <!-- <div class="pixel-art-decoration" style="top: 100px; left: 100px;"></div>
         <div class="pixel-art-decoration" style="bottom: 150px; right: 200px;"></div>
-        <div class="pixel-art-decoration" style="bottom: 300px; left: 300px;"></div>
+        <div class="pixel-art-decoration" style="bottom: 300px; left: 300px;"></div> -->
     </section>
 
     <!-- About Section -->
@@ -989,6 +1068,105 @@
                 window.open(githubLink, '_blank');
             });
         });
+    </script>
+
+    <script>
+        function createSVGPlusSigns() {
+        const plusContainer = document.getElementById('plusContainer');
+        // Increase the number of signs
+        const numSigns = 40; // Increased from 15 to 40
+        
+        // Get the dimensions of the container
+        const containerRect = plusContainer.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        // Define a "safe zone" around the center that we want to avoid
+        const centerX = containerWidth / 2;
+        const centerY = containerHeight / 2;
+        const safeZoneWidth = containerWidth * 0.4; // 40% of container width
+        const safeZoneHeight = containerHeight * 0.3; // 30% of container height
+        
+        for (let i = 0; i < numSigns; i++) {
+            // Create SVG element
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "40");
+            svg.setAttribute("height", "40");
+            svg.setAttribute("viewBox", "0 0 40 40");
+            svg.classList.add("svg-plus");
+            
+            // Create plus shape
+            const plus = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            
+            // Different plus styles
+            const plusStyles = [
+                "M15,5 L25,5 L25,15 L35,15 L35,25 L25,25 L25,35 L15,35 L15,25 L5,25 L5,15 L15,15 Z", // Regular plus
+                "M10,0 L30,0 L30,10 L40,10 L40,30 L30,30 L30,40 L10,40 L10,30 L0,30 L0,10 L10,10 Z",  // Chunky plus
+                "M17,7 L23,7 L23,17 L33,17 L33,23 L23,23 L23,33 L17,33 L17,23 L7,23 L7,17 L17,17 Z"  // Thinner plus
+            ];
+            
+            plus.setAttribute("d", plusStyles[Math.floor(Math.random() * plusStyles.length)]);
+            
+            // Decide color - pink or blue
+            const isBlue = Math.random() > 0.5;
+            const color = isBlue ? "#6c9fff" : "#fd79a8";
+            plus.setAttribute("fill", color);
+            
+            // Position randomly but avoid the center area
+            let posX, posY;
+            let isInSafeZone;
+            
+            do {
+                // Use full range from 0% to 100% of container dimensions
+                posX = Math.random() * containerWidth;
+                posY = Math.random() * containerHeight;
+                
+                // Check if the position is in the safe zone (center area)
+                isInSafeZone = (
+                    posX > centerX - safeZoneWidth/2 && 
+                    posX < centerX + safeZoneWidth/2 && 
+                    posY > centerY - safeZoneHeight/2 && 
+                    posY < centerY + safeZoneHeight/2
+                );
+                
+            } while (isInSafeZone); // Keep generating until we get a position outside the safe zone
+            
+            // Set position directly as percentage of container dimensions
+            svg.style.left = `${(posX / containerWidth) * 100}%`;
+            svg.style.top = `${(posY / containerHeight) * 100}%`;
+            
+            // Random size with increased variation
+            const size = Math.floor(Math.random() * 40) + 10; // Between 10px and 50px
+            svg.style.width = `${size}px`;
+            svg.style.height = `${size}px`;
+            
+            // Add animations
+            const animations = ['float-slow', 'float-medium', 'float-fast', 'pulse'];
+            svg.classList.add(animations[Math.floor(Math.random() * animations.length)]);
+            
+            // Add opacity variation
+            svg.style.opacity = (Math.random() * 0.5 + 0.5).toString(); // Between 0.5 and 1.0
+            
+            // Add SVG to container
+            svg.appendChild(plus);
+            plusContainer.appendChild(svg);
+        }
+    }
+
+    // Run when page loads
+    document.addEventListener('DOMContentLoaded', createSVGPlusSigns);
+
+    // Also run when window is resized to reposition elements
+    window.addEventListener('resize', function() {
+        // Remove all existing plus signs
+        const plusContainer = document.getElementById('plusContainer');
+        while (plusContainer.firstChild) {
+            plusContainer.removeChild(plusContainer.firstChild);
+        }
+        
+        // Create new ones
+        createSVGPlusSigns();
+    });
     </script>
 
     <script src="https://unpkg.com/github-calendar@latest/dist/github-calendar.min.js"></script>
